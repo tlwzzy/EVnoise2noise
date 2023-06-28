@@ -6,8 +6,6 @@ import torch.nn.functional as F
 import torchvision.transforms.functional as tvF
 from torch.utils.data import Dataset, DataLoader
 
-from utils import load_hdr_as_tensor
-
 import os
 from sys import platform
 import numpy as np

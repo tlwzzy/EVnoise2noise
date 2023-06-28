@@ -3,7 +3,7 @@ from typing import Any
 import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
-from torchmetrics.classification.accuracy import Accuracy
+from torchmetrics.classification.accuracy import AccuracyPeakSignalNoiseRatio
 
 
 class Noise2NoiseModule(LightningModule):
@@ -26,6 +26,7 @@ class Noise2NoiseModule(LightningModule):
         net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        loss_type = "l1",
     ):
         super().__init__()
 
@@ -36,12 +37,17 @@ class Noise2NoiseModule(LightningModule):
         self.net = net
 
         # loss function
-        self.criterion = torch.nn.CrossEntropyLoss()
+        if self.hparams.loss_type.lower() == 'l2':
+            self.loss = nn.MSELoss()
+        elif self.hparams.loss_type.lower() == "l1":
+            self.loss = nn.L1Loss()
+        else:
+            raise ValueError("Loss not implemented.")
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task="multiclass", num_classes=10)
-        self.val_acc = Accuracy(task="multiclass", num_classes=10)
-        self.test_acc = Accuracy(task="multiclass", num_classes=10)
+        # self.train_acc = Accuracy(task="multiclass", num_classes=10)
+        self.val_psnr = PeakSignalNoiseRatio()
+        self.test_psnr = PeakSignalNoiseRatio()
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -49,7 +55,7 @@ class Noise2NoiseModule(LightningModule):
         self.test_loss = MeanMetric()
 
         # for tracking best so far validation accuracy
-        self.val_acc_best = MaxMetric()
+        self.val_psnr_best = MaxMetric()
 
     def forward(self, x: torch.Tensor):
         return self.net(x)
@@ -63,9 +69,9 @@ class Noise2NoiseModule(LightningModule):
 
     def model_step(self, batch: Any):
         x, y = batch
-        logits = self.forward(x)
-        loss = self.criterion(logits, y)
-        preds = torch.argmax(logits, dim=1)
+        restored_x = self.forward(x)
+        loss = self.loss(restored_x, y)
+        preds = torch.argmax(restored_x, dim=1)
         return loss, preds, y
 
     def training_step(self, batch: Any, batch_idx: int):
@@ -73,9 +79,7 @@ class Noise2NoiseModule(LightningModule):
 
         # update and log metrics
         self.train_loss(loss)
-        self.train_acc(preds, targets)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
 
         # return loss or backpropagation will fail
         return loss
@@ -88,16 +92,16 @@ class Noise2NoiseModule(LightningModule):
 
         # update and log metrics
         self.val_loss(loss)
-        self.val_acc(preds, targets)
+        self.val_psnr(preds, targets)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/psnr", self.val_psnr, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self):
-        acc = self.val_acc.compute()  # get current val acc
-        self.val_acc_best(acc)  # update best so far val acc
+        psnr = self.val_psnr.compute()  # get current val acc
+        self.val_psnr_best(psnr)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-        self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
+        self.log("val/psnr_best", self.val_psnr_best.compute(), sync_dist=True, prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)

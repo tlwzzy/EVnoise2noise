@@ -1,0 +1,21 @@
+_target_: src.models.mnist_module.Noise2NoiseModule
+
+optimizer:
+  _target_: torch.optim.AdamW
+  _partial_: true
+  lr: 0.001
+  # weight_decay: 0.0
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  verbose: true
+  # mode: min
+  factor: 0.5
+  # patience: 10
+  patience: ${trainer.max_epochs} / 4
+
+net:
+  _target_: src.models.components.unet.UNet
+  in_channels: 3
+  out_channels: 3

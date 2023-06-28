@@ -4,6 +4,7 @@ import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import AccuracyPeakSignalNoiseRatio
+from src.utils.rgb_utils import create_montage
 
 
 class Noise2NoiseModule(LightningModule):
@@ -108,9 +109,9 @@ class Noise2NoiseModule(LightningModule):
 
         # update and log metrics
         self.test_loss(loss)
-        self.test_acc(preds, targets)
+        self.test_psnr(preds, targets)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/psnr", self.test_psnr, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self):
         pass

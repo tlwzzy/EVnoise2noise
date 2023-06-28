@@ -37,10 +37,9 @@ class RGBDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        train_val_test_split: Tuple[int, int, int] = (55_000, 5_000, 10_000),
         batch_size: int = 64,
         num_workers: int = 0,
-        pin_memory: bool = False,
+        pin_memory: bool = True,
     ):
         super().__init__()
 
@@ -49,17 +48,14 @@ class RGBDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # data transformations
-        self.transforms = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
-        )
+        # self.transforms = transforms.Compose(
+        #     [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+        # )
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
 
-    @property
-    def num_classes(self):
-        return 10
 
     def prepare_data(self):
         """Download data if needed.

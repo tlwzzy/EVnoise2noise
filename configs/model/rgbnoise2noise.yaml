@@ -13,7 +13,7 @@ scheduler:
   # mode: min
   factor: 0.5
   # patience: 10
-  patience: ${trainer.max_epochs} / 4
+  patience: ${trainer.max_epochs} / 5
 
 net:
   _target_: src.models.components.unet.UNet

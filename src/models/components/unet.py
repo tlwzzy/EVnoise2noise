@@ -24,6 +24,21 @@ class UNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2))
 
+        self.block2_1 = nn.Sequential(
+            nn.Conv2d(48, 48, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2))
+
+        self.block2_2 = nn.Sequential(
+            nn.Conv2d(48, 48, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2))
+
+        self.block2_3 = nn.Sequential(
+            nn.Conv2d(48, 48, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2))
+
         # Layers: enc_conv6, upsample5
         self._block3 = nn.Sequential(
             nn.Conv2d(48, 48, 3, stride=1, padding=1),
@@ -42,6 +57,22 @@ class UNet(nn.Module):
 
         # Layers: dec_deconv(i)a, dec_deconv(i)b, upsample(i-1); i=4..2
         self._block5 = nn.Sequential(
+            nn.Conv2d(144, 96, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(96, 96, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(96, 96, 3, stride=2, padding=1, output_padding=1))
+            #nn.Upsample(scale_factor=2, mode='nearest'))
+
+        self._block5_1 = nn.Sequential(
+            nn.Conv2d(144, 96, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(96, 96, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(96, 96, 3, stride=2, padding=1, output_padding=1))
+            #nn.Upsample(scale_factor=2, mode='nearest'))
+
+        self._block5_2 = nn.Sequential(
             nn.Conv2d(144, 96, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(96, 96, 3, stride=1, padding=1),
@@ -77,9 +108,9 @@ class UNet(nn.Module):
         # Encoder
         pool1 = self._block1(x)
         pool2 = self._block2(pool1)
-        pool3 = self._block2(pool2)
-        pool4 = self._block2(pool3)
-        pool5 = self._block2(pool4)
+        pool3 = self._block2_1(pool2)
+        pool4 = self._block2_2(pool3)
+        pool5 = self._block2_3(pool4)
 
         # Decoder
         upsample5 = self._block3(pool5)
@@ -88,9 +119,9 @@ class UNet(nn.Module):
         concat4 = torch.cat((upsample4, pool3), dim=1)
         upsample3 = self._block5(concat4)
         concat3 = torch.cat((upsample3, pool2), dim=1)
-        upsample2 = self._block5(concat3)
+        upsample2 = self._block5_1(concat3)
         concat2 = torch.cat((upsample2, pool1), dim=1)
-        upsample1 = self._block5(concat2)
+        upsample1 = self._block5_2(concat2)
         concat1 = torch.cat((upsample1, x), dim=1)
 
         # Final activation

@@ -13,7 +13,7 @@
 
 ## Description
 
-What it does
+Event version Noise2Noise plus RGB version Noise2Noise.
 
 ## Installation
 
@@ -50,6 +50,11 @@ conda activate myenv
 ```
 
 ## How to run
+
+##### prepare data for RGB
+```shell
+bash preparecoco2017val.sh
+```
 
 Train model with default configuration
 

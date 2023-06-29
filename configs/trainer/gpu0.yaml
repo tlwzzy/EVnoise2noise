@@ -1,0 +1,8 @@
+defaults:
+  - default.yaml
+
+accelerator: gpu
+devices: [0]
+
+precision: 16-mixed
+max_epochs: 200

@@ -24,17 +24,17 @@ class UNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2))
 
-        self.block2_1 = nn.Sequential(
+        self._block2_1 = nn.Sequential(
             nn.Conv2d(48, 48, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2))
 
-        self.block2_2 = nn.Sequential(
+        self._block2_2 = nn.Sequential(
             nn.Conv2d(48, 48, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2))
 
-        self.block2_3 = nn.Sequential(
+        self._block2_3 = nn.Sequential(
             nn.Conv2d(48, 48, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2))

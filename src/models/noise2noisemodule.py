@@ -1,9 +1,10 @@
 from typing import Any
 
 import torch
+from torch import nn
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
-from torchmetrics.classification.accuracy import AccuracyPeakSignalNoiseRatio
+from torchmetrics import PeakSignalNoiseRatio
 from src.utils.rgb_utils import create_montage
 
 
@@ -27,7 +28,7 @@ class Noise2NoiseModule(LightningModule):
         net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
-        loss_type = "l1",
+        loss_type: str = "l1",
     ):
         super().__init__()
 
@@ -65,15 +66,14 @@ class Noise2NoiseModule(LightningModule):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
-        self.val_acc.reset()
-        self.val_acc_best.reset()
+        self.val_psnr.reset()
+        self.val_psnr_best.reset()
 
     def model_step(self, batch: Any):
         x, y = batch
         restored_x = self.forward(x)
         loss = self.loss(restored_x, y)
-        preds = torch.argmax(restored_x, dim=1)
-        return loss, preds, y
+        return loss, restored_x, y
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)

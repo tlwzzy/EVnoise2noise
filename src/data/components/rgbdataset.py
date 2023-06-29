@@ -47,8 +47,8 @@ class AbstractDataset(Dataset):
 
         self.imgs = []
         self.root_dir = root_dir
-        self.redux = redux
-        self.crop_size = crop_size
+        self.redux = int(redux)
+        self.crop_size = int(crop_size)
         self.clean_targets = clean_targets
 
     def _random_crop(self, img_list):
@@ -90,19 +90,20 @@ class NoisyDataset(AbstractDataset):
     """Class for injecting random noise into dataset."""
 
     def __init__(self, root_dir, redux, crop_size, clean_targets=False,
-        noise_dist=('gaussian', 50.), seed=None):
+        noise_type='gaussian', noise_param = 50., seed=None):
         """Initializes noisy image dataset."""
 
         super(NoisyDataset, self).__init__(root_dir, redux, crop_size, clean_targets)
 
         self.imgs = os.listdir(root_dir)
+        redux = int(redux)
         if redux:
             self.imgs = self.imgs[:redux]
 
         # Noise parameters (max std for Gaussian, lambda for Poisson, nb of artifacts for text)
-        self.noise_type = noise_dist[0]
-        self.noise_param = noise_dist[1]
-        self.seed = seed
+        self.noise_type = noise_type
+        self.noise_param = float(noise_param)
+        self.seed = int(seed)
         if self.seed:
             np.random.seed(self.seed)
 

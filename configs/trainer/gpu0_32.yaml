@@ -1,0 +1,4 @@
+defaults:
+- gpu0.yaml
+
+precision: 32

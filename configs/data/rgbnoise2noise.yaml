@@ -1,5 +1,5 @@
 _target_: src.data.rgbdatamodule.RGBDataModule
-batch_size: 128
+batch_size: 64
 num_workers: 8
 pin_memory: True
 global_seed: 42

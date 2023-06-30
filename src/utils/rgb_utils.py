@@ -96,7 +96,7 @@ def create_montage(img_name, noise_type, save_path, source_t, denoised_t, clean_
     """Creates montage for easy comparison."""
 
     fig, ax = plt.subplots(1, 3, figsize=(9, 3))
-    fig.canvas.set_window_title(img_name.capitalize()[:-4])
+    fig.canvas.manager.set_window_title(img_name.capitalize()[:-4])
 
     # Bring tensors to CPU
     source_t = source_t.cpu().narrow(0, 0, 3)

@@ -16,8 +16,8 @@ scheduler:
   # patience: ${trainer.max_epochs} / 5
 
 net:
-  _target_: src.models.components.unet.UNet
-  in_channels: 3
-  out_channels: 3
+  _target_: src.models.components.unets.U_Net
+  in_ch: 3
+  out_ch: 3
 
 loss_type: l2

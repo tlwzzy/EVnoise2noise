@@ -6,6 +6,7 @@ from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics import PeakSignalNoiseRatio
 from src.utils.rgb_utils import create_montage
+import torch.nn.functional as F
 
 
 class Noise2NoiseModule(LightningModule):
@@ -82,6 +83,8 @@ class Noise2NoiseModule(LightningModule):
         self.train_loss(loss)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
 
+        # print(self.logger.log_dir)
+
         # return loss or backpropagation will fail
         return loss
 
@@ -105,7 +108,15 @@ class Noise2NoiseModule(LightningModule):
         self.log("val/psnr_best", self.val_psnr_best.compute(), sync_dist=True, prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.model_step(batch)
+        # force batch_size = 1 and no crop no redux
+        x,_ = batch
+        x = self.padtesttensor(x)
+        _ = self.padtesttensor(_)
+        loss, preds, targets = self.model_step((x,_))
+        x = x.squeeze(0)
+        preds = preds.squeeze(0)
+        targets = targets.squeeze(0)
+        create_montage(img_name=(str(batch_idx) + ".png"), noise_type="gaussian", save_path=self.logger.log_dir + "/", source_t=x, denoised_t=preds, clean_t=targets, show=0)
 
         # update and log metrics
         self.test_loss(loss)
@@ -113,8 +124,33 @@ class Noise2NoiseModule(LightningModule):
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/psnr", self.test_psnr, on_step=False, on_epoch=True, prog_bar=True)
 
+
     def on_test_epoch_end(self):
         pass
+
+    def padtesttensor(self, input):
+        original_height = input.size(2)
+        original_width = input.size(3)
+
+        # 计算长边尺寸
+        longer_side = max(original_height, original_width)
+
+        # 计算目标尺寸，使其与长边尺寸相同
+        target_height = target_width = longer_side
+
+        # 计算需要进行填充的数量
+        pad_height = max(0, target_height - original_height)
+        pad_width = max(0, target_width - original_width)
+
+        # 计算填充量
+        top_pad = pad_height // 2
+        bottom_pad = pad_height - top_pad
+        left_pad = pad_width // 2
+        right_pad = pad_width - left_pad
+
+        # 使用零填充调整尺寸
+        padded_input = F.pad(input, (left_pad, right_pad, top_pad, bottom_pad), mode='constant', value=0)
+        return padded_input
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.

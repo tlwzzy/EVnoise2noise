@@ -1,6 +1,6 @@
 defaults:
   - model_checkpoint.yaml
-  # - early_stopping.yaml
+  - early_stopping.yaml
   - model_summary.yaml
   - rich_progress_bar.yaml
   - _self_
@@ -14,7 +14,7 @@ model_checkpoint:
   auto_insert_metric_name: False
 
 early_stopping:
-  monitor: "val/acc"
+  monitor: "val/psnr"
   patience: 100
   mode: "max"
 

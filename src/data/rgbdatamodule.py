@@ -86,7 +86,7 @@ class RGBDataModule(LightningDataModule):
         clean_targets=False, noise_type=self.hparams.noise_type, noise_param=self.hparams.noise_param,seed=self.hparams.global_seed)
             self.data_val = NoisyDataset(root_dir = self.hparams.val_dir, redux=self.hparams.val_size, crop_size = self.hparams.crop_size,
         clean_targets=True, noise_type=self.hparams.noise_type, noise_param=self.hparams.noise_param,seed=self.hparams.global_seed)
-            self.data_test = NoisyDataset(root_dir = self.hparams.test_dir, redux=0, crop_size = self.hparams.crop_size,
+            self.data_test = NoisyDataset(root_dir = self.hparams.test_dir, redux=0, crop_size = 0,
         clean_targets=True, noise_type=self.hparams.noise_type, noise_param=self.hparams.noise_param,seed=self.hparams.global_seed)
             
 
@@ -111,8 +111,10 @@ class RGBDataModule(LightningDataModule):
     def test_dataloader(self):
         return DataLoader(
             dataset=self.data_test,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
+            # batch_size=self.hparams.batch_size,
+            batch_size=1,
+            num_workers=0,
+            # num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
         )

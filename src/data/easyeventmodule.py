@@ -4,7 +4,7 @@ import torch
 from lightning import LightningDataModule
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 from torchvision.transforms import transforms
-from src.data.components.rgbdataset import NoisyDataset
+from src.data.components.eventeasydataset import NoisyDataset
 
 
 class RGBDataModule(LightningDataModule):
@@ -95,7 +95,7 @@ class RGBDataModule(LightningDataModule):
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            shuffle=True,
+            shuffle=False,
         )
 
     def val_dataloader(self):

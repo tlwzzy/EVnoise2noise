@@ -11,7 +11,7 @@
 #   - hydra: default.yaml
 defaults:
   - _self_
-  - data: rgbnoise2noise.yaml
+  - data: eventeasy.yaml
   - model: rgbnoise2noise.yaml
   - callbacks: default.yaml
   - logger: csv.yaml # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
@@ -25,4 +25,4 @@ task_name: "eval"
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: "/home/zy/test/code/EVnoise2noise/logs/train/runs/2023-06-30_16-16-07/checkpoints/epoch_040.ckpt"
+ckpt_path: "/home/zy/test/code/EVnoise2noise/logs/train/runs/2023-07-02_13-41-55/checkpoints/epoch_022.ckpt"

@@ -96,6 +96,7 @@ class NoisyDataset(AbstractDataset):
         super(NoisyDataset, self).__init__(root_dir, redux, crop_size, clean_targets)
 
         self.imgs = os.listdir(root_dir)
+        self.imgs.sort()
         redux = int(redux)
         if redux:
             self.imgs = self.imgs[:redux]

@@ -78,6 +78,8 @@ class NoisyDataset(AbstractDataset):
 
         super(NoisyDataset, self).__init__(root_dir, redux, crop_size, clean_targets)
 
+        self.root_dir += "preprocessed/"
+        root_dir += "preprocessed/"
         self.imgs = os.listdir(root_dir)
         self.imgs.sort()
         # print(self.imgs)
@@ -99,6 +101,7 @@ class NoisyDataset(AbstractDataset):
         # Load PIL image
         img_path = os.path.join(self.root_dir, self.imgs[index])
         target_path = os.path.join(self.root_dir, self.imgs[index + 1])
+        # print(img_path)
         img =  Image.open(img_path).convert('RGB')
         target =  Image.open(target_path).convert('RGB')
 

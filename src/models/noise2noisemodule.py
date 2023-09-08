@@ -30,6 +30,7 @@ class Noise2NoiseModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         loss_type: str = "l1",
+        compile=False,
     ):
         super().__init__()
 
@@ -37,13 +38,16 @@ class Noise2NoiseModule(LightningModule):
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
-        self.net = net
+        # self.net = torch.compile(net) if compile else net
+        self.net = torch.compile(net) if compile else net
 
         # loss function
         if self.hparams.loss_type.lower() == 'l2':
             self.loss = nn.MSELoss()
         elif self.hparams.loss_type.lower() == "l1":
             self.loss = nn.L1Loss()
+        elif self.hparams.loss_type.lower() == "smoothl1":
+            self.loss = nn.SmoothL1Loss()
         else:
             raise ValueError("Loss not implemented.")
 

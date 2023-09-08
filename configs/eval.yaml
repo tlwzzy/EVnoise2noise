@@ -25,4 +25,4 @@ task_name: "eval"
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: "/home/zy/test/code/EVnoise2noise/logs/train/runs/2023-07-02_13-41-55/checkpoints/epoch_022.ckpt"
+ckpt_path: "/home/zy/test/code/EVnoise2noise/logs/train/runs/2023-07-20_19-25-49/checkpoints/epoch_099.ckpt"

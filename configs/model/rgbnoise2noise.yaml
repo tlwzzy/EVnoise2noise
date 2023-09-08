@@ -1,5 +1,6 @@
 _target_: src.models.noise2noisemodule.Noise2NoiseModule
 
+compile: True
 optimizer:
   _target_: torch.optim.AdamW
   _partial_: true

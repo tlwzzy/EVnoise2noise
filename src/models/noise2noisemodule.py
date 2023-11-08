@@ -8,6 +8,10 @@ from torchmetrics import PeakSignalNoiseRatio
 from src.utils.rgb_utils import create_montage, mask_image_torch
 import torch.nn.functional as F
 
+import numpy as np
+import cv2
+import os
+
 
 class Noise2NoiseModule(LightningModule):
     """Example of LightningModule for MNIST classification.
@@ -115,6 +119,13 @@ class Noise2NoiseModule(LightningModule):
         # otherwise metric would be reset by lightning after each epoch
         self.log("val/psnr_best", self.val_psnr_best.compute(), sync_dist=True, prog_bar=True)
 
+    def on_test_start(self):
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        self.out = cv2.VideoWriter(os.path.join((self.logger.log_dir + "/"), f"denoised.mp4"), fourcc, 10.0, (640, 640))
+
+    def on_test_end(self):
+        self.out.release()
+
     def test_step(self, batch: Any, batch_idx: int):
         # force batch_size = 1 and no crop no redux
         x,_ = batch
@@ -130,6 +141,8 @@ class Noise2NoiseModule(LightningModule):
         preds[mask] = 0
 
         denoised_image = create_montage(img_name=(str(batch_idx) + ".png"), noise_type="gaussian", save_path=self.logger.log_dir + "/", source_t=x, denoised_t=preds, clean_t=targets, show=0)
+
+        self.out.write(np.array(denoised_image))
 
         # update and log metrics
         self.test_loss(loss)

@@ -5,7 +5,7 @@ from torch import nn
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics import PeakSignalNoiseRatio
-from src.utils.rgb_utils import create_montage
+from src.utils.rgb_utils import create_montage, mask_image_torch
 import torch.nn.functional as F
 
 
@@ -31,12 +31,14 @@ class Noise2NoiseModule(LightningModule):
         scheduler: torch.optim.lr_scheduler,
         loss_type: str = "l1",
         compile=False,
+        recon=False,
     ):
         super().__init__()
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
+        self.recon = recon
 
         # self.net = torch.compile(net) if compile else net
         self.net = torch.compile(net) if compile else net
@@ -82,7 +84,9 @@ class Noise2NoiseModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
-
+        if self.recon:
+            targets = self.forward(targets)
+            loss += self.loss(targets, preds)
         # update and log metrics
         self.train_loss(loss)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -120,7 +124,12 @@ class Noise2NoiseModule(LightningModule):
         x = x.squeeze(0)
         preds = preds.squeeze(0)
         targets = targets.squeeze(0)
-        create_montage(img_name=(str(batch_idx) + ".png"), noise_type="gaussian", save_path=self.logger.log_dir + "/", source_t=x, denoised_t=preds, clean_t=targets, show=0)
+
+        mask = mask_image_torch(preds, threshold=25)
+        preds = x.clone()
+        preds[mask] = 0
+
+        denoised_image = create_montage(img_name=(str(batch_idx) + ".png"), noise_type="gaussian", save_path=self.logger.log_dir + "/", source_t=x, denoised_t=preds, clean_t=targets, show=0)
 
         # update and log metrics
         self.test_loss(loss)

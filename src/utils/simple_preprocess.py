@@ -33,7 +33,7 @@ def preprocess_images(directory: str) -> None:
         cv2.imwrite(new_filename, img)
 
     print("Preprocessing completed.")
-
-preprocess_images(train_path)
-preprocess_images(val_path)
 preprocess_images(test_path)
+preprocess_images(val_path)
+preprocess_images(train_path)
+

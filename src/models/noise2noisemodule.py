@@ -82,6 +82,8 @@ class Noise2NoiseModule(LightningModule):
 
     def model_step(self, batch: Any):
         x, y = batch
+        # x = self.padtesttensor(x)
+        # y = self.padtesttensor(y)
         restored_x = self.forward(x)
         loss = self.loss(restored_x, y)
         return loss, restored_x, y
@@ -121,7 +123,7 @@ class Noise2NoiseModule(LightningModule):
 
     def on_test_start(self):
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        self.out = cv2.VideoWriter(os.path.join((self.logger.log_dir + "/"), f"denoised.mp4"), fourcc, 10.0, (640, 640))
+        self.out = cv2.VideoWriter(os.path.join((self.logger.log_dir + "/"), f"denoised.mp4"), fourcc, 10.0, (640, 480))
 
     def on_test_end(self):
         self.out.release()
@@ -129,14 +131,13 @@ class Noise2NoiseModule(LightningModule):
     def test_step(self, batch: Any, batch_idx: int):
         # force batch_size = 1 and no crop no redux
         x,_ = batch
-        x = self.padtesttensor(x)
-        _ = self.padtesttensor(_)
         loss, preds, targets = self.model_step((x,_))
+        # preds = self.forward(preds)
         x = x.squeeze(0)
         preds = preds.squeeze(0)
         targets = targets.squeeze(0)
 
-        mask = mask_image_torch(preds, threshold=25)
+        mask = mask_image_torch(preds, threshold=33)
         preds = x.clone()
         preds[mask] = 0
 

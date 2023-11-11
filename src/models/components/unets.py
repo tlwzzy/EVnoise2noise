@@ -4,6 +4,23 @@ import torch.nn.functional as F
 import torch.utils.data
 import torch
 
+class simplenet(nn.Module):
+    def __init__(self,in_ch=3, out_ch = 3, chan_embed=64):
+        super(simplenet, self).__init__()
+
+        n_chan = in_ch
+        
+        self.act = nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        self.conv1 = nn.Conv2d(n_chan,chan_embed,3,padding=1)
+        self.conv2 = nn.Conv2d(chan_embed, chan_embed, 3, padding = 1)
+        self.conv3 = nn.Conv2d(chan_embed, n_chan, 1)
+
+    def forward(self, x):
+        x = self.act(self.conv1(x))
+        x = self.act(self.conv2(x))
+        x = self.conv3(x)
+        
+        return x
 
 class conv_block(nn.Module):
     """
@@ -292,9 +309,10 @@ class AttU_Net(nn.Module):
     Attention Unet implementation
     Paper: https://arxiv.org/abs/1804.03999
     """
-    def __init__(self, img_ch=3, output_ch=1):
+    def __init__(self, in_ch=3, out_ch=1):
         super(AttU_Net, self).__init__()
-
+        img_ch = in_ch
+        output_ch = out_ch
         # n1 = 64
         n1 = 16
         filters = [n1, n1 * 2, n1 * 4, n1 * 8, n1 * 16]

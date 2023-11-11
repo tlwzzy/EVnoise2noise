@@ -27,4 +27,4 @@ tags: ["dev"]
 # compile: False
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: "/home/zy/test/code/EVnoise2noise/logs/train/runs/2023-11-08_19-59-37/checkpoints/epoch_099.ckpt"
+ckpt_path: "/home/zy/test/code/EVnoise2noise/logs/pths/l2recon_143_09b.ckpt"

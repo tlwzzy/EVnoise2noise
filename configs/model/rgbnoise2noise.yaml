@@ -17,7 +17,8 @@ scheduler:
   # patience: ${trainer.max_epochs} / 5
 
 net:
-  _target_: src.models.components.unets.U_Net
+  # _target_: src.models.components.unets.U_Net
+  _target_: src.models.components.unets.simplenet
   in_ch: 3
   out_ch: 3
 

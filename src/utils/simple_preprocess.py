@@ -34,6 +34,6 @@ def preprocess_images(directory: str) -> None:
 
     print("Preprocessing completed.")
 preprocess_images(test_path)
-preprocess_images(val_path)
-preprocess_images(train_path)
+# preprocess_images(val_path)
+# preprocess_images(train_path)
 

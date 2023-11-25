@@ -5,5 +5,5 @@ accelerator: gpu
 devices: [0]
 
 precision: 16-mixed
-max_epochs: 2000
+max_epochs: 100
 gradient_clip_val: 1.0

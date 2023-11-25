@@ -18,6 +18,8 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+from torchmetrics.functional.image import total_variation
+from torchmetrics.functional.multimodal import clip_image_quality_assessment
 
 
 def clear_line():
@@ -121,10 +123,12 @@ def create_montage(img_name, noise_type, save_path, source_t, denoised_t, clean_
     clean = tvF.to_pil_image(torch.clamp(clean_t, 0 ,1))
 
     # Build image montage
-    psnr_vals = [psnr(source_t, clean_t), psnr(denoised_t, clean_t)]
-    titles = ['Input: {:.2f} dB'.format(psnr_vals[0]),
-              'Denoised: {:.2f} dB'.format(psnr_vals[1]),
-              'Ground truth']
+    # tv_vals = [psnr(source_t, clean_t), psnr(denoised_t, clean_t)]
+    tv_vals = [total_variation(source_t.unsqueeze(0)),total_variation(denoised_t.unsqueeze(0))]
+    # ciqa_vals = [clip_image_quality_assessment(source_t.unsqueeze(0)), clip_image_quality_assessment(denoised_t.unsqueeze(0))]
+    titles = ['Input Image: {:.3e} TS'.format(tv_vals[0]),
+              'Denoised: {:.3e} TS'.format(tv_vals[1]),
+              'Original output Image']
     zipped = zip(titles, [source, denoised, clean])
     for j, (title, img) in enumerate(zipped):
         ax[j].imshow(img)
@@ -140,6 +144,7 @@ def create_montage(img_name, noise_type, save_path, source_t, denoised_t, clean_
     source.save(os.path.join(save_path, f'{fname}-{noise_type}-noisy.png'))
     denoised.save(os.path.join(save_path, f'{fname}-{noise_type}-denoised.png'))
     fig.savefig(os.path.join(save_path, f'{fname}-{noise_type}-montage.png'), bbox_inches='tight')
+    plt.close()
 
     return denoised
 

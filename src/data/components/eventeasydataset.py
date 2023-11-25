@@ -114,3 +114,53 @@ class NoisyDataset(AbstractDataset):
         target = tvF.to_tensor(target)
 
         return source, target
+
+class NoisyTestDataset(AbstractDataset):
+    """Class for injecting random noise into dataset."""
+
+    def __init__(self, root_dir, redux, crop_size, clean_targets=False,
+        noise_type='gaussian', noise_param = 50., seed=None):
+        """Initializes noisy image dataset."""
+
+        super(NoisyTestDataset, self).__init__(root_dir, redux, crop_size, clean_targets)
+
+        self.root_dir += "preprocessed/"
+        root_dir += "preprocessed/"
+        self.imgs = os.listdir(root_dir)
+        # print(self.imgs)
+        redux = int(redux)
+        if redux:
+            self.imgs = self.imgs[:redux]
+
+        # Noise parameters (max std for Gaussian, lambda for Poisson, nb of artifacts for text)
+        self.noise_type = noise_type
+        self.noise_param = float(noise_param)
+        self.seed = int(seed)
+        if self.seed:
+            np.random.seed(self.seed)
+
+
+    def __getitem__(self, index):
+        """Retrieves image from folder and corrupts it."""
+
+        # Load PIL image
+        img_path = os.path.join(self.root_dir, self.imgs[index])
+        target_path = os.path.join(self.root_dir, self.imgs[index])
+        # print(img_path)
+        img =  Image.open(img_path).convert('RGB')
+        target =  Image.open(target_path).convert('RGB')
+
+        # Random square crop
+        if self.crop_size != 0:
+            img = self._random_crop([img])[0]
+
+        # Corrupt source image
+        source = tvF.to_tensor(img)
+        target = tvF.to_tensor(target)
+
+        return source, target
+
+    def __len__(self):
+        """Returns length of dataset."""
+
+        return len(self.imgs)

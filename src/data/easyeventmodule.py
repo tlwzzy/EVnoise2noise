@@ -4,7 +4,7 @@ import torch
 from lightning import LightningDataModule
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 from torchvision.transforms import transforms
-from src.data.components.eventeasydataset import NoisyDataset
+from src.data.components.eventeasydataset import NoisyDataset, NoisyTestDataset
 
 
 class RGBDataModule(LightningDataModule):
@@ -85,7 +85,7 @@ class RGBDataModule(LightningDataModule):
         clean_targets=False, noise_type=self.hparams.noise_type, noise_param=self.hparams.noise_param,seed=self.hparams.global_seed)
             self.data_val = NoisyDataset(root_dir = self.hparams.val_dir, redux=self.hparams.val_size, crop_size = self.hparams.crop_size,
         clean_targets=True, noise_type=self.hparams.noise_type, noise_param=self.hparams.noise_param,seed=self.hparams.global_seed)
-            self.data_test = NoisyDataset(root_dir = self.hparams.test_dir, redux=0, crop_size = self.hparams.crop_size,
+            self.data_test = NoisyTestDataset(root_dir = self.hparams.test_dir, redux=0, crop_size = self.hparams.crop_size,
         clean_targets=True, noise_type=self.hparams.noise_type, noise_param=self.hparams.noise_param,seed=self.hparams.global_seed)
             
 

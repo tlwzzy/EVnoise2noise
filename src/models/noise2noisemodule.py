@@ -7,6 +7,7 @@ from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics import PeakSignalNoiseRatio
 from src.utils.rgb_utils import create_montage, mask_image_torch
 import torch.nn.functional as F
+from torchmetrics.functional.image import total_variation
 
 import numpy as np
 import cv2
@@ -36,6 +37,9 @@ class Noise2NoiseModule(LightningModule):
         loss_type: str = "l1",
         compile=False,
         recon=False,
+        tv_weight = 0,
+        save_mask = True,
+        time_test = False
     ):
         super().__init__()
 
@@ -43,6 +47,9 @@ class Noise2NoiseModule(LightningModule):
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
         self.recon = recon
+        self.tv_weight = tv_weight
+        self.save_mask = save_mask
+        self.time_test = time_test
 
         # self.net = torch.compile(net) if compile else net
         self.net = torch.compile(net) if compile else net
@@ -90,9 +97,12 @@ class Noise2NoiseModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
-        if self.recon:
+        if self.recon and self.current_epoch > 10:
             targets = self.forward(targets)
             loss += self.loss(targets, preds)
+        if self.tv_weight > 0:
+            loss += self.tv_weight * total_variation(preds, reduction='mean')
+        
         # update and log metrics
         self.train_loss(loss)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -122,8 +132,29 @@ class Noise2NoiseModule(LightningModule):
         self.log("val/psnr_best", self.val_psnr_best.compute(), sync_dist=True, prog_bar=True)
 
     def on_test_start(self):
+        if self.time_test:
+            import time
+
+
+            # 生成随机数据
+            data = torch.randn(128, 3, 640, 480)
+            data = data.to(self.device)
+
+            # 测量推理时间
+            start_time = time.time()
+
+            with torch.no_grad():
+                for i in range(data.size(0)):
+                    input = data[i].unsqueeze(0)  # 添加批次维度
+                    predictions = self.forward(input)
+
+            end_time = time.time()
+            total_time = end_time - start_time
+            print(f"处理20个数据点的推理总耗时: {total_time} 秒")
+
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         self.out = cv2.VideoWriter(os.path.join((self.logger.log_dir + "/"), f"denoised.mp4"), fourcc, 10.0, (640, 480))
+
 
     def on_test_end(self):
         self.out.release()
@@ -134,14 +165,30 @@ class Noise2NoiseModule(LightningModule):
         loss, preds, targets = self.model_step((x,_))
         # preds = self.forward(preds)
         x = x.squeeze(0)
+        original_output = preds.clone().squeeze(0)
         preds = preds.squeeze(0)
         targets = targets.squeeze(0)
+        mask = mask_image_torch(preds, threshold=20)
+        if self.save_mask:
+            import matplotlib.pyplot as plt
 
-        mask = mask_image_torch(preds, threshold=33)
+            # 假设你的 mask 是一个形状为 (3, 480, 640) 的 torch.Tensor
+            # 取第一个通道
+            mask_channel1 = mask[0, :, :]
+
+            # 将 torch.Tensor 转换为 numpy 数组
+            mask_np = mask_channel1.cpu().numpy()
+
+            # 可视化
+            plt.imshow(mask_np, cmap='gray')
+            plt.axis('off')  # 关闭坐标轴
+            plt.savefig(self.logger.log_dir + "/" + str(batch_idx) + "mask.png")  # 保存可视化的图像到本地
+            plt.close()
+
         preds = x.clone()
         preds[mask] = 0
 
-        denoised_image = create_montage(img_name=(str(batch_idx) + ".png"), noise_type="gaussian", save_path=self.logger.log_dir + "/", source_t=x, denoised_t=preds, clean_t=targets, show=0)
+        denoised_image = create_montage(img_name=(str(batch_idx) + ".png"), noise_type="gaussian", save_path=self.logger.log_dir + "/", source_t=x, denoised_t=preds, clean_t=original_output, show=0)
 
         self.out.write(np.array(denoised_image))
 

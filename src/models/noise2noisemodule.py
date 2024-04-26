@@ -168,7 +168,7 @@ class Noise2NoiseModule(LightningModule):
         original_output = preds.clone().squeeze(0)
         preds = preds.squeeze(0)
         targets = targets.squeeze(0)
-        mask = mask_image_torch(preds, threshold=20)
+        mask = mask_image_torch(preds, threshold=30)
         if self.save_mask:
             import matplotlib.pyplot as plt
 
